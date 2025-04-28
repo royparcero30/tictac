@@ -22,11 +22,11 @@ const showAlert = (title, message, buttons) => {
 
 const App = () => {
   const [board, setBoard] = useState(initialBoard);
-  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [currentPlayer, setCurrentPlayer] = useState('Player1');
   const [gameOver, setGameOver] = useState(false);
-  const [scores, setScores] = useState({ X: 0, O: 0 });
+  const [scores, setScores] = useState({ Player1: 0, Player2: 0 });
   const [winningCombo, setWinningCombo] = useState(null);
-  const [playerNames, setPlayerNames] = useState({ X: 'Player X', O: 'Player O' });
+  const [playerNames, setPlayerNames] = useState({ Player1: 'Player 1', Player2: 'Player 2' });
 
   const handlePress = (index) => {
     if (board[index] || gameOver) return;
@@ -48,7 +48,7 @@ const App = () => {
       setGameOver(true);
       showAlert('Game Over', "It's a draw!", [{ text: 'Next Round', onPress: resetBoard }]);
     } else {
-      setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
+      setCurrentPlayer(currentPlayer === 'Player1' ? 'Player2' : 'Player1');
     }
   };
 
@@ -69,13 +69,13 @@ const App = () => {
 
   const resetBoard = () => {
     setBoard(initialBoard);
-    setCurrentPlayer('X');
+    setCurrentPlayer('Player1');
     setGameOver(false);
     setWinningCombo(null);
   };
 
   const resetScores = () => {
-    setScores({ X: 0, O: 0 });
+    setScores({ Player1: 0, Player2: 0 });
     resetBoard();
   };
 
@@ -87,7 +87,9 @@ const App = () => {
         style={[styles.cell, isWinning && styles.winningCell]}
         onPress={() => handlePress(index)}
       >
-        <Text style={styles.cellText}>{board[index]}</Text>
+        <Text style={styles.cellText}>
+          {board[index] === 'Player1' ? 'X' : board[index] === 'Player2' ? 'O' : ''}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -103,27 +105,27 @@ const App = () => {
         <View style={styles.playerCard}>
           <TextInput
             style={styles.playerNameInput}
-            value={playerNames['X']}
-            onChangeText={(text) => handleNameChange('X', text)}
-            placeholder="Player X"
+            value={playerNames['Player1']}
+            onChangeText={(text) => handleNameChange('Player1', text)}
+            placeholder="Player 1"
             placeholderTextColor="#888"
           />
-          <Text style={styles.scoreText}>Score: {scores['X']}</Text>
+          <Text style={styles.scoreText}>Score: {scores['Player1']}</Text>
         </View>
         <View style={styles.playerCard}>
           <TextInput
             style={styles.playerNameInput}
-            value={playerNames['O']}
-            onChangeText={(text) => handleNameChange('O', text)}
-            placeholder="Player O"
+            value={playerNames['Player2']}
+            onChangeText={(text) => handleNameChange('Player2', text)}
+            placeholder="Player 2"
             placeholderTextColor="#888"
           />
-          <Text style={styles.scoreText}>Score: {scores['O']}</Text>
+          <Text style={styles.scoreText}>Score: {scores['Player2']}</Text>
         </View>
       </View>
 
       <Text style={styles.turnText}>
-        Turn: {currentPlayer === 'X' ? playerNames['X'] : playerNames['O']}
+        Turn: {currentPlayer === 'Player1' ? playerNames['Player1'] : playerNames['Player2']}
       </Text>
 
       <View style={styles.board}>
@@ -170,6 +172,7 @@ const styles = StyleSheet.create({
     width: 130,
     borderWidth: 1,
     borderColor: '#333',
+    marginHorizontal: 10,
   },
   playerNameInput: {
     fontSize: 16,
@@ -199,15 +202,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     borderRadius: 20,
     padding: 2,
-  },
-  cell: {
-    width: '33.33%',
-    height: '33.33%',
-    borderWidth: 1,
-    borderColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#222',
   },
   cell: {
     width: '33.33%',
