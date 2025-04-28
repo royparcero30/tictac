@@ -9,13 +9,9 @@ import {
   Alert as RNAlert,
 } from 'react-native';
 
-type Player = 'X' | 'O';
-type Cell = Player | null;
+const initialBoard = Array(9).fill(null);
 
-const initialBoard: Cell[] = Array(9).fill(null);
-
-// ✅ Safe alert function
-const showAlert = (title: string, message?: string, buttons?: any[]) => {
+const showAlert = (title, message, buttons) => {
   if (Platform.OS === 'web') {
     window.alert(`${title}\n\n${message}`);
     if (buttons && buttons[0]?.onPress) buttons[0].onPress();
@@ -25,18 +21,14 @@ const showAlert = (title: string, message?: string, buttons?: any[]) => {
 };
 
 const App = () => {
-  const [board, setBoard] = useState<Cell[]>(initialBoard);
-  const [currentPlayer, setCurrentPlayer] = useState<Player>('X');
+  const [board, setBoard] = useState(initialBoard);
+  const [currentPlayer, setCurrentPlayer] = useState('X');
   const [gameOver, setGameOver] = useState(false);
-  const [scores, setScores] = useState<{ X: number; O: number }>({ X: 0, O: 0 });
-  const [winningCombo, setWinningCombo] = useState<number[] | null>(null);
-  const [winner, setWinner] = useState<Player | null>(null);
-  const [playerNames, setPlayerNames] = useState<{ X: string; O: string }>({
-    X: 'Player X',
-    O: 'Player O',
-  });
+  const [scores, setScores] = useState({ X: 0, O: 0 });
+  const [winningCombo, setWinningCombo] = useState(null);
+  const [playerNames, setPlayerNames] = useState({ X: 'Player X', O: 'Player O' });
 
-  const handlePress = (index: number) => {
+  const handlePress = (index) => {
     if (board[index] || gameOver) return;
 
     const newBoard = [...board];
@@ -45,24 +37,22 @@ const App = () => {
 
     const winnerCombo = checkWinner(newBoard);
     if (winnerCombo) {
-      const winPlayer = newBoard[winnerCombo[0]] as Player;
+      const winPlayer = newBoard[winnerCombo[0]];
       setScores((prev) => ({ ...prev, [winPlayer]: prev[winPlayer] + 1 }));
       setWinningCombo(winnerCombo);
       setGameOver(true);
-      setWinner(winPlayer);
       showAlert('Game Over', `${playerNames[winPlayer]} wins!`, [
         { text: 'Next Round', onPress: resetBoard },
       ]);
     } else if (newBoard.every((cell) => cell !== null)) {
       setGameOver(true);
-      setWinner(null);
       showAlert('Game Over', "It's a draw!", [{ text: 'Next Round', onPress: resetBoard }]);
     } else {
       setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
     }
   };
 
-  const checkWinner = (board: Cell[]): number[] | null => {
+  const checkWinner = (board) => {
     const combos = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
       [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -82,7 +72,6 @@ const App = () => {
     setCurrentPlayer('X');
     setGameOver(false);
     setWinningCombo(null);
-    setWinner(null);
   };
 
   const resetScores = () => {
@@ -90,7 +79,7 @@ const App = () => {
     resetBoard();
   };
 
-  const renderCell = (index: number) => {
+  const renderCell = (index) => {
     const isWinning = winningCombo?.includes(index);
     return (
       <TouchableOpacity
@@ -103,12 +92,13 @@ const App = () => {
     );
   };
 
-  const handleNameChange = (player: Player, name: string) => {
+  const handleNameChange = (player, name) => {
     setPlayerNames((prev) => ({ ...prev, [player]: name }));
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Tic Tac Toe</Text>
       <View style={styles.scoreContainer}>
         <View style={styles.playerCard}>
           <TextInput
@@ -116,35 +106,36 @@ const App = () => {
             value={playerNames['X']}
             onChangeText={(text) => handleNameChange('X', text)}
             placeholder="Player X"
-            placeholderTextColor="#777"
+            placeholderTextColor="#888"
           />
-          <Text style={styles.playerSymbol}>X</Text>
-          <Text style={styles.scoreText}>{scores['X']}</Text>
+          <Text style={styles.scoreText}>Score: {scores['X']}</Text>
         </View>
-
-        <Text style={styles.turnArrow}>{currentPlayer === 'X' ? '←' : '→'}</Text>
-
         <View style={styles.playerCard}>
           <TextInput
             style={styles.playerNameInput}
             value={playerNames['O']}
             onChangeText={(text) => handleNameChange('O', text)}
             placeholder="Player O"
-            placeholderTextColor="#777"
+            placeholderTextColor="#888"
           />
-          <Text style={styles.playerSymbol}>O</Text>
-          <Text style={styles.scoreText}>{scores['O']}</Text>
+          <Text style={styles.scoreText}>Score: {scores['O']}</Text>
         </View>
       </View>
 
-      <View style={styles.board}>{board.map((_, i) => renderCell(i))}</View>
+      <Text style={styles.turnText}>
+        Turn: {currentPlayer === 'X' ? playerNames['X'] : playerNames['O']}
+      </Text>
+
+      <View style={styles.board}>
+        {board.map((_, index) => renderCell(index))}
+      </View>
 
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.controlButton} onPress={resetBoard}>
-          <Text style={styles.buttonText}>Reset Current Game</Text>
+        <TouchableOpacity style={styles.button} onPress={resetBoard}>
+          <Text style={styles.buttonText}>New Round</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.controlButton} onPress={resetScores}>
-          <Text style={styles.buttonText}>Reset Scores</Text>
+        <TouchableOpacity style={styles.button} onPress={resetScores}>
+          <Text style={styles.buttonText}>Reset Game</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -154,89 +145,106 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'darkred',
+    backgroundColor: '#121212',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 50,
+    padding: 20,
+  },
+  title: {
+    color: '#00eaff',
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   scoreContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
     marginBottom: 20,
   },
   playerCard: {
-    backgroundColor: 'black',
-    padding: 15,
-    borderRadius: 12,
+    backgroundColor: '#00eaff',
+    padding: 16,
+    borderRadius: 16,
     alignItems: 'center',
-    width: 120,
+    width: 130,
+    borderWidth: 1,
+    borderColor: '#333',
   },
   playerNameInput: {
-    color: '#eee',
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2f3640',
     marginBottom: 5,
     borderBottomWidth: 1,
-    borderBottomColor: 'darkred',
+    borderBottomColor: '#718093',
     width: '100%',
     textAlign: 'center',
   },
-  playerSymbol: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
   scoreText: {
-    color: '#bbb',
-    fontSize: 18,
-    marginTop: 5,
+    fontSize: 16,
+    color: '#2f3640',
   },
-  turnArrow: {
-    color: '#fff',
-    fontSize: 32,
-    marginHorizontal: 20,
+  turnText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#00eaff',
+    marginBottom: 10,
   },
   board: {
     width: 300,
     height: 300,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    borderColor: '#fff',
-    borderWidth: 2,
-    marginBottom: 20,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    padding: 2,
   },
   cell: {
     width: '33.33%',
     height: '33.33%',
     borderWidth: 1,
-    borderColor: 'white',
+    borderColor: '#333',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#222',
+  },
+  cell: {
+    width: '33.33%',
+    height: '33.33%',
+    borderWidth: 1,
+    borderColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#222',
   },
   cellText: {
-    fontSize: 48,
+    fontSize: 42,
     fontWeight: 'bold',
-    color: 'black',
+    color: '#00eaff',
+    textShadowColor: '#00eaff88',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   winningCell: {
-    backgroundColor: '#333',
+    backgroundColor: '#004d4d',
   },
   buttonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    marginTop: 30,
     gap: 10,
   },
-  controlButton: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 8,
+  button: {
+    backgroundColor: '#00eaff',
+    padding: 12,
     marginHorizontal: 5,
+    borderRadius: 10,
   },
   buttonText: {
-    color: '#000',
+    color: 'black',
     fontSize: 14,
     fontWeight: '600',
   },
 });
+
 export default App;
